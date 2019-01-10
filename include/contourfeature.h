@@ -15,6 +15,7 @@ bool Test_Armored_Color(Mat color_roi,int Armor_Color)
     bool is_color = 0;
     double H=0.0,S=0.0,V=0.0;
     int x,y;
+    int flag = 0;
     for(x = 0;x < color_roi.cols; ++x)
     {
         for(y = 0;y < color_roi.rows; ++y)
@@ -25,11 +26,11 @@ bool Test_Armored_Color(Mat color_roi,int Armor_Color)
             //red
             if(Armor_Color == 0)
             {
-                if((H>=156 && H<180)||(H>=0 && H<=10))
+                if((H>=145 && H<180)||(H>=0 && H<=30))
                 {   if(S >= 150 && S <= 255)
-                    {   if(V > 150 && V <= 255)
-                        {   is_color = 1;
-                            continue;
+                    {   if(V > 80 && V <= 255)
+                        {
+                            flag += 1;
                         }
                     }
                 }
@@ -39,11 +40,16 @@ bool Test_Armored_Color(Mat color_roi,int Armor_Color)
                 if(H>=100 && H<124)
                 {   if(S >= 200-20 && S <= 255)
                     {   if(V > 200-50 && V <= 255)
-                        {   is_color = 1;
-                            continue;
+                        {
+                            flag += 1;
                         }
                     }
                 }
+            }
+            if((flag / color_roi.cols*color_roi.rows) > 0.5)
+            {
+                is_color = 1;
+                continue;
             }
         }
     }
