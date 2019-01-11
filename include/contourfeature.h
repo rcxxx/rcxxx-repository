@@ -15,9 +15,10 @@ bool Test_Armored_Color(Mat color_roi,int Armor_Color)
     bool is_color = 0;
     double H=0.0,S=0.0,V=0.0;
     int x,y;
-    for(x = 0;x < color_roi.cols; ++x)
+    int flag = 0;
+    for(x = color_roi.cols/4;x < color_roi.cols/4+color_roi.cols/2; ++x)
     {
-        for(y = 0;y < color_roi.rows; ++y)
+        for(y = color_roi.rows/4;y < color_roi.rows/4+color_roi.rows/2; ++y)
         {
             H = hsv_roi.at<Vec3b>(y,x)[0];
             S = hsv_roi.at<Vec3b>(y,x)[1];
@@ -25,25 +26,30 @@ bool Test_Armored_Color(Mat color_roi,int Armor_Color)
             //red
             if(Armor_Color == 0)
             {
-                if((H>=156 && H<180)||(H>=0 && H<=10))
-                {   if(S >= 150 && S <= 255)
-                    {   if(V > 150 && V <= 255)
-                        {   is_color = 1;
-                            continue;
+                if((H>=145 && H<180)||(H>=0 && H<=13))
+                {   if(S >= 135 && S <= 255)
+                    {   if(/*(V > 148 && V <= 255) ||*/(V > 148 && V <= 255))
+                        {
+                            flag += 1;
                         }
                     }
                 }
             }
             else
             {   //blue
-                if(H>=100 && H<124)
-                {   if(S >= 200-20 && S <= 255)
-                    {   if(V > 200-50 && V <= 255)
-                        {   is_color = 1;
-                            continue;
+                if(H>=70 && H<=155)
+                {   if(S >= 43 && S <= 255)
+                    {   if(V >= 43 && V <= 255)
+                        {
+                            flag += 1;
                         }
                     }
                 }
+            }
+            if((flag / color_roi.cols*color_roi.rows) > 0.5)
+            {
+                is_color = 1;
+                continue;
             }
         }
     }

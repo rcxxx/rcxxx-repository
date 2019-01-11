@@ -6,6 +6,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include "contourfeature.h"
+#include "configure.h"
 
 using namespace cv;
 
@@ -42,20 +43,38 @@ bool Rect_different(const RotatedRect &r1, const RotatedRect &r2)
     float distance = sqrt(pow(x1-x2,2)+pow(y1-y2,2));
     float w = abs(w1-w2);
     float h = abs(h1-h2);
+    float R_S_Low = 0.f;
+    float R_S_High = 0.f;
+    float R_B_Low = 0.f;
+    float R_B_High = 0.f;
     if(slope<0.5)
     {
-        if(distance > max(w1,w2)*6 || (max(w1,w2)*10.5 < distance && distance < max(w1,w2)*14.5))
+        if(armor_color == 0)
+        {
+            R_S_Low = max(w1,w2)*4;
+            R_S_High = max(w1,w2)*13.5;
+            R_B_Low = max(w1,w2)*14.5;
+            R_B_High = max(w1,w2)*22;
+        }
+        else
+        {
+            R_S_Low = max(w1,w2)*4.11;
+            R_S_High = max(w1,w2)*12.55;
+            R_B_Low = max(w1,w2)*13.11;
+            R_B_High = max(w1,w2)*22.66;
+        }
+        if(distance < R_S_High || (R_B_Low < distance && distance < R_B_High))
         {
             if(h>w)
             {
                 float ratio = h/max(h1,h2);
-                if(ratio < 0.16)
+                if(ratio < 0.35)
                     is = 1;
             }
             else
             {
                 float ratio = w/max(w1,w2);
-                if(ratio < 0.16)
+                if(ratio < 0.35)
                     is = 1;
             }
         }
@@ -99,7 +118,7 @@ bool Light_filter(RotatedRect R_rect_1,RotatedRect R_rect_2)
     {
         ratio = Area_1/Area_2;
     }
-    if(0.4 < ratio && ratio < 1)
+    if(0.35 < ratio && ratio < 1.1)
         is = 1;
     return is;
 }
@@ -139,7 +158,7 @@ bool Distance_Height(RotatedRect R_rect_1, RotatedRect R_rect_2)
     {
         h = h2;
     }
-    if((distence > h && distence < h*3) || (distence > h*3 && distence < h*6))
+    if((distence > h && distence < h*8))
     {
         is = 1;
     }

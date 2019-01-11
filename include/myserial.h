@@ -73,8 +73,8 @@ void serialSet()
 
 void sendData(int x,int y)
 {
-    //sprintf(buf,"%s%d%d%s","S",x,y,"E");
-    sprintf(buf,"%s%d%s%d","S",x,",",y);
+    //sprintf(buf,"%s%03d%03d%s","S",x,y,"E");
+    sprintf(buf,"%s%03d%s%03d","S",x,",",y);
     //sprintf(buf,"%s%d%d","S",x,y);
     std::cout<<std::endl<<buf<<std::endl;
     write(fd,buf,sizeof(buf));

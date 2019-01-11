@@ -24,11 +24,14 @@ Mat dst_img;    //输出图
 int main()
 {
     /*----------调用相机----------*/
-    CameraSet(cameramode);
+    CameraSet();
     /*----------调用相机----------*/
 
     /*----------串口部分----------*/
-    serialSet();//串口初始化函数
+    if(serialisopen == 1)
+    {
+        serialSet();//串口初始化函数
+    }
     /*----------串口部分----------*/
 
     /*----------参数初始化----------*/
@@ -39,7 +42,7 @@ int main()
     }
     else
     {
-        threshold_Value = 40;
+        threshold_Value = 10;
         Armor_olor = 1;
     }
     /*----------参数初始化----------*/
@@ -63,7 +66,7 @@ int main()
             //--------------色彩分割	-----------------//
             cvtColor(src_img, gray_img, COLOR_BGR2GRAY);
             threshold(gray_img, bin_img, threshold_Value, 255, THRESH_BINARY);
-            medianBlur(bin_img, bin_img,3);
+            medianBlur(bin_img, bin_img,5);
             Canny(bin_img,bin_img,120,240);
 
             vector<vector<Point>> contours;
@@ -123,20 +126,23 @@ int main()
                     rotateRect.push_back(R_rect_i);
                 }
             }
-            float distance_max = 0;
-
+            float distance_max = 0.f;
+            float slope_min = 10.0;
+            float ratio_maxW_distance_min = 0.f;
             //第二遍两个循环匹配灯条
-            for (int k1 = 0;k1<(int)boundRect.size();++k1)
+            for (int k1 = 0;k1<(int)rotateRect.size();++k1)
             {
-                if(boundRect.size()<=1)
+                if(rotateRect.size()<=1)
                     break;
-                for (int k2 = k1+1;k2<(int)boundRect.size();++k2)
+                for (int k2 = k1+1;k2<(int)rotateRect.size();++k2)
                 {
                     if(Light_filter(rotateRect[k1],rotateRect[k2]))
                     {
                         if(Rect_different(rotateRect[k1],rotateRect[k2]))
                         {
                             float distance_temp = CenterDistance(rotateRect[k1].center,rotateRect[k2].center);
+                            float slope_temp = fabs((rotateRect[k1].center.y-rotateRect[k2].center.y)/(rotateRect[k1].center.x-rotateRect[k2].center.x));
+                            float ratio_maxW_distance_temp = max(rotateRect[k1].size.width,rotateRect[k2].size.width) / distance_temp;
                             if (Distance_Height(rotateRect[k1],rotateRect[k2]))
                             {
                                 //ROI_1
@@ -199,10 +205,17 @@ int main()
                                 {
                                     if(Test_Armored_Color(roi_2,Armor_olor)==1)
                                     {
-                                        distance_temp = CenterDistance(rotateRect[k1].center,rotateRect[k2].center);
-                                        if(distance_temp > distance_max)
+                                        if(distance_temp >= distance_max)
                                         {
                                             distance_max = distance_temp;
+                                        }
+                                        if(slope_temp <=slope_min )
+                                        {
+                                            slope_min = slope_temp;
+                                        }
+                                        if(ratio_maxW_distance_temp <= ratio_maxW_distance_min )
+                                        {
+                                            ratio_maxW_distance_min = ratio_maxW_distance_temp;
                                         }
 
                                         //imshow("roi",roi_1);
@@ -226,9 +239,9 @@ int main()
             {
                 float distance = CenterDistance(midPoint_pair[k3][0],midPoint_pair[k3][1]);
                 float slope = fabs((midPoint_pair[k3][0].y-midPoint_pair[k3][1].y)/(midPoint_pair[k3][0].x-midPoint_pair[k3][1].x));
-                if(distance >= distance_max)
+                if(distance >= distance_max)//|| slope <= slope_min)
                 {
-                    if(slope <= 0.5)
+                    if(slope <= 0.26)
                     {
                         line(dst_img,midPoint_pair[k3][0],midPoint_pair[k3][1],Scalar(0,0,255),2,8);
                         int x1 = midPoint_pair[k3][0].x;
@@ -251,7 +264,8 @@ int main()
                         t2 = getTickCount();
                         RunTime = (t2-t1)/getTickFrequency();
                         FPS = 1 / RunTime;
-                        cout<<"time:"<<RunTime<<endl<<"FPS:"<<FPS<<endl;
+                        //cout<<"time:"<<RunTime<<endl;
+                        cout<<"FPS:"<<FPS<<endl;
                         break;
                     }
                 }
