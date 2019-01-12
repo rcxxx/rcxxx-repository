@@ -33,9 +33,9 @@ bool Test_Armored_Color(Mat color_roi,const int Armor_Color)
             }
             else
             {   //blue
-                if(H>=70 && H<=155)
-                {   if(S >= 43 && S <= 255)
-                    {   if(V >= 43 && V <= 255)
+                if(H>=100 && H<=155)
+                {   if(S >= 215 && S <= 255)
+                    {   if(V >= 205 && V <= 255)
                         {
                             flag += 1;
                         }

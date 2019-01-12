@@ -37,27 +37,21 @@ bool Rect_different(const RotatedRect &r1, const RotatedRect &r2)
     float distance = sqrt(pow(x1-x2,2)+pow(y1-y2,2));
     float w = abs(w1-w2);
     float h = abs(h1-h2);
-    float R_S_Low = 0.f;
-    float R_S_High = 0.f;
-    float R_B_Low = 0.f;
-    float R_B_High = 0.f;
+    float Low = 0.f;
+    float High = 0.f;
     if(slope<0.5)
     {
         if(armor_color == 0)
         {
-            R_S_Low = max(w1,w2)*4.11;
-            R_S_High = max(w1,w2)*12.88;
-            R_B_Low = max(w1,w2)*13.11;
-            R_B_High = max(w1,w2)*22.66;
+            Low = max(w1,w2)*4.110;
+            High = max(w1,w2)*24.888;
         }
         else
         {
-            R_S_Low = max(w1,w2)*4.11;
-            R_S_High = max(w1,w2)*12.88;
-            R_B_Low = max(w1,w2)*13.11;
-            R_B_High = max(w1,w2)*22.66;
+            Low = max(w1,w2)*4.110;
+            High = max(w1,w2)*24.888;
         }
-        if((R_S_Low < distance && distance < R_S_High) || (R_B_Low < distance && distance < R_B_High))
+        if(Low < distance&& distance < High)
         {
             if(h>w)
             {
@@ -112,7 +106,7 @@ bool Light_filter(RotatedRect R_rect_1,RotatedRect R_rect_2)
     {
         ratio = Area_1/Area_2;
     }
-    if(0.35 < ratio && ratio < 1.1)
+    if(0.4 < ratio && ratio < 1.1)
         is = 1;
     return is;
 }
@@ -152,7 +146,7 @@ bool Distance_Height(RotatedRect R_rect_1, RotatedRect R_rect_2)
     {
         h = h2;
     }
-    if((distence > h && distence < h*8))
+    if((distence > h && distence < h*8.011))
     {
         is = 1;
     }
