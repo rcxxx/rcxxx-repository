@@ -2,13 +2,9 @@
 #ifndef CONTOURFEATURE_H
 #define CONTOURFEATURE_H
 
-#include <math.h>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
+#include "configure.h"
 
-using namespace cv;
-
-bool Test_Armored_Color(Mat color_roi,int Armor_Color)
+bool Test_Armored_Color(Mat color_roi,const int Armor_Color)
 {
     Mat hsv_roi;
     cvtColor(color_roi,hsv_roi,COLOR_BGR2HSV);
@@ -28,7 +24,7 @@ bool Test_Armored_Color(Mat color_roi,int Armor_Color)
             {
                 if((H>=145 && H<180)||(H>=0 && H<=13))
                 {   if(S >= 135 && S <= 255)
-                    {   if(/*(V > 148 && V <= 255) ||*/(V > 148 && V <= 255))
+                    {   if(V > 148 && V <= 255)
                         {
                             flag += 1;
                         }
@@ -62,7 +58,7 @@ float CenterDistance(Point p1,Point p2)
     return D;
 }
 
-int Light_State(RotatedRect rect)
+int Light_State(const RotatedRect &rect)
 {
     int w;
     int h;
@@ -100,7 +96,7 @@ int Light_State(RotatedRect rect)
     }
 }
 
-void getROI(Mat src, RotatedRect rect, Mat roi)
+void getROI(Mat src,const RotatedRect &rect, Mat roi)
 {
     Point2f verices[4];
     Point2f verdst[4];

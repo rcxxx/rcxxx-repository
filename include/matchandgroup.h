@@ -2,13 +2,7 @@
 #ifndef MATCHANDGROUP_H
 #define MATCHANDGROUP_H
 
-#include <math.h>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include "contourfeature.h"
 #include "configure.h"
-
-using namespace cv;
 
 bool Rect_different(const RotatedRect &r1, const RotatedRect &r2)
 {
@@ -51,19 +45,19 @@ bool Rect_different(const RotatedRect &r1, const RotatedRect &r2)
     {
         if(armor_color == 0)
         {
-            R_S_Low = max(w1,w2)*4;
-            R_S_High = max(w1,w2)*13.5;
-            R_B_Low = max(w1,w2)*14.5;
-            R_B_High = max(w1,w2)*22;
+            R_S_Low = max(w1,w2)*4.11;
+            R_S_High = max(w1,w2)*12.88;
+            R_B_Low = max(w1,w2)*13.11;
+            R_B_High = max(w1,w2)*22.66;
         }
         else
         {
             R_S_Low = max(w1,w2)*4.11;
-            R_S_High = max(w1,w2)*12.55;
+            R_S_High = max(w1,w2)*12.88;
             R_B_Low = max(w1,w2)*13.11;
             R_B_High = max(w1,w2)*22.66;
         }
-        if(distance < R_S_High || (R_B_Low < distance && distance < R_B_High))
+        if((R_S_Low < distance && distance < R_S_High) || (R_B_Low < distance && distance < R_B_High))
         {
             if(h>w)
             {

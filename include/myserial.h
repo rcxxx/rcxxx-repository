@@ -2,12 +2,8 @@
 #ifndef MYSERIAL_H
 #define MYSERIAL_H
 
-#include <iostream>
-#include <fcntl.h>  //文件控制定义
-#include <termios.h>   //POSIX终端控制定义
-#include <unistd.h>    //UNIX标准定义
-#include <errno.h>     //ERROR数字定义
-#include <sys/select.h>
+#include "configure.h"
+#include "contourfeature.h"
 
 int fd;
 char * buf = new char[8];//分配内存空间
@@ -71,13 +67,45 @@ void serialSet()
 //    SerialPortSettings.c_iflag &= ~(ICANON|ECHO|ECHOE|ISIG);    //设置操作模式
 }
 
-void sendData(int x,int y)
+void sendData(int x,int y,int SendDataFlag)
 {
-    //sprintf(buf,"%s%03d%03d%s","S",x,y,"E");
-    sprintf(buf,"%s%03d%s%03d","S",x,",",y);
-    //sprintf(buf,"%s%d%d","S",x,y);
-    std::cout<<std::endl<<buf<<std::endl;
-    write(fd,buf,sizeof(buf));
-    sleep_ms(1);
+    switch (SendDataFlag)
+    {
+    case 0:
+    {
+        sprintf(buf,"%s%03d%s%03d","S",x,",",y);
+        std::cout<<std::endl<<buf<<std::endl;
+        write(fd,buf,sizeof(buf));
+        sleep_ms(1);
+    }
+        break;
+    case 1:
+    {
+        sprintf(buf,"%s%s%s","S","None","00N");
+        std::cout<<std::endl<<buf<<std::endl;
+        write(fd,buf,sizeof(buf));
+        sleep_ms(1);
+    }
+        break;
+    case 2:
+    {
+        sprintf(buf,"%s%s%s","S","None","00L");
+        std::cout<<std::endl<<buf<<std::endl;
+        write(fd,buf,sizeof(buf));
+        sleep_ms(1);
+    }
+        break;
+    case 3:
+    {
+        sprintf(buf,"%s%s%s","S","None","00R");
+        std::cout<<std::endl<<buf<<std::endl;
+        write(fd,buf,sizeof(buf));
+        sleep_ms(1);
+    }
+        break;
+    default:
+        break;
+    }
 }
+
 #endif // MYSERIAL_H

@@ -1,14 +1,9 @@
-#include <iostream>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/core.hpp>
-
-#include "cameracfg.h"
+#include "cameraconfigure.h"
 #include "configure.h"
 #include "contourfeature.h"
 #include "myserial.h"
-#include "CameraApi.h"
 #include "matchandgroup.h"
+#include "databuff.h"
 
 using namespace cv;
 using namespace std;
@@ -23,8 +18,9 @@ Mat dst_img;    //输出图
 
 int main()
 {
+    cameraconfigure camera;
     /*----------调用相机----------*/
-    CameraSet();
+    camera.CameraSet();
     /*----------调用相机----------*/
 
     /*----------串口部分----------*/
@@ -45,22 +41,23 @@ int main()
         threshold_Value = 10;
         Armor_olor = 1;
     }
+    int SendBuf_COUNT = 0;    //ifSendSuccess
     /*----------参数初始化----------*/
     //----------识别部分----------
     for(;;)
     {
         t1 = getTickCount();
-        if(CameraGetImageBuffer(hCamera,&sFrameInfo,&pbyBuffer,1000) == CAMERA_STATUS_SUCCESS)
+        if(CameraGetImageBuffer(camera.hCamera,&camera.sFrameInfo,&camera.pbyBuffer,1000) == CAMERA_STATUS_SUCCESS)
         {
             //----------读取原图----------//
-            CameraImageProcess(hCamera, pbyBuffer, g_pRgbBuffer,&sFrameInfo);
-            if (iplImage)
+            CameraImageProcess(camera.hCamera, camera.pbyBuffer, camera.g_pRgbBuffer,&camera.sFrameInfo);
+            if (camera.iplImage)
             {
-                cvReleaseImageHeader(&iplImage);
+                cvReleaseImageHeader(&camera.iplImage);
             }
-            iplImage = cvCreateImageHeader(cvSize(sFrameInfo.iWidth,sFrameInfo.iHeight),IPL_DEPTH_8U,channel);
-            cvSetData(iplImage,g_pRgbBuffer,sFrameInfo.iWidth*channel);//此处只是设置指针，无图像块数据拷贝，不需担心转换效率
-            src_img = cvarrToMat(iplImage,true);//这里只是进行指针转换，将IplImage转换成Mat类型
+            camera.iplImage = cvCreateImageHeader(cvSize(camera.sFrameInfo.iWidth,camera.sFrameInfo.iHeight),IPL_DEPTH_8U,camera.channel);
+            cvSetData(camera.iplImage,camera.g_pRgbBuffer,camera.sFrameInfo.iWidth*camera.channel);//此处只是设置指针，无图像块数据拷贝，不需担心转换效率
+            src_img = cvarrToMat(camera.iplImage,true);//这里只是进行指针转换，将IplImage转换成Mat类型
             src_img.copyTo(dst_img);
 
             //--------------色彩分割	-----------------//
@@ -234,6 +231,10 @@ int main()
                     }
                 }
             }
+            int RecoginitionSuccess_FLAG = 0;    //ifRecoginitionSuccess
+            int X_Widht;
+            int Y_height;
+
             //第三遍求最优灯条
             for (int k3 = 0;k3<(int)midPoint_pair.size();++k3)
             {
@@ -250,17 +251,14 @@ int main()
                         int y2 = midPoint_pair[k3][1].y;
                         Point mid_point = Point(int((x1 + x2)/2), int((y1 + y2)/2));
                         //cout<<"x:"<<mid_point.x<<"   y:"<<mid_point.y;
-
-                        //DEBUG
-                        int X_Widht = mid_point.x;
-                        int Y_height = mid_point.y;
-
-                        cout<<"X"<<src_img.cols/2<<"  "<<"Y"<<src_img.rows/2<<endl;
-                        if(serialisopen == 1)
+                        X_Widht = mid_point.x;
+                        Y_height = mid_point.y;
+                        RecoginitionSuccess_FLAG = 2;
+                        if(isCentralBUffer(src_img,mid_point))
                         {
-                            sendData(X_Widht,Y_height);
+                            RecoginitionSuccess_FLAG = 1;
                         }
-                        //DEBUG
+                        cout<<"X"<<src_img.cols/2<<"  "<<"Y"<<src_img.rows/2<<endl;                        
                         t2 = getTickCount();
                         RunTime = (t2-t1)/getTickFrequency();
                         FPS = 1 / RunTime;
@@ -270,22 +268,85 @@ int main()
                     }
                 }
             }
+            if(serialisopen == 1)
+            {
+                switch (RecoginitionSuccess_FLAG)
+                {
+                 case 0:
+                {
+                    if(SendBuf_COUNT < 3)
+                    {
+                        SendBuf_COUNT += 1;
+                        sendData(X_Widht,Y_height,0);
+                        cout<<"send buf_temp"<<endl;
+                    }
+                    else
+                    {
+                        int leftorright = missingflag(src_img,X_Widht);
+                        switch(leftorright)
+                        {
+                        case 1:
+                        {
+                            sendData(X_Widht,Y_height,1);
+                            cout<<"send None"<<endl;
+                        }
+                            break;
+                        case 2:
+                        {
+                            sendData(X_Widht,Y_height,2);
+                            cout<<"send None"<<endl<<"missing left"<<endl;
+                        }
+                            break;
+                        case 3:
+                        {
+                            sendData(X_Widht,Y_height,3);
+                            cout<<"send None"<<endl<<"missing right"<<endl;
+                        }
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                }
+                    break;
+                case 1:
+                {
+                    SendBuf_COUNT = 0;
+                    int X = src_img.cols/2;
+                    int Y = src_img.rows/2;
+                    sendData(X,Y,0);
+                    sprintf(buf_temp,"%s%03d%s%03d","S",X_Widht,",",Y_height);
+                    cout<<"send center"<<endl;
+                }
+                    break;
+                case 2:
+                {
+                    SendBuf_COUNT = 0;
+                    sendData(X_Widht,Y_height,0);
+                    buf_temp = buf;
+                    cout<<"send success"<<endl;
+                }
+                    break;
+                default:
+                    break;
+                }
+            }
             imshow("th",bin_img);
             imshow("input" ,src_img);
             imshow("output",dst_img);
             int key = waitKey(1);
             if(char(key) == 27)
             {
-                CameraReleaseImageBuffer(hCamera,pbyBuffer);
+                CameraReleaseImageBuffer(camera.hCamera,camera.pbyBuffer);
                 break;
             }
             //在成功调用CameraGetImageBuffer后，必须调用CameraReleaseImageBuffer来释放获得的buffer。
             //否则再次调用CameraGetImageBuffer时，程序将被挂起一直阻塞，直到其他线程中调用CameraReleaseImageBuffer来释放了buffer
-            CameraReleaseImageBuffer(hCamera,pbyBuffer);
+            CameraReleaseImageBuffer(camera.hCamera,camera.pbyBuffer);
         }
     }
-    CameraUnInit(hCamera);
+    CameraUnInit(camera.hCamera);
     //注意，现反初始化后再free
-    free(g_pRgbBuffer);
+    free(camera.g_pRgbBuffer);
     return 0;
 }
